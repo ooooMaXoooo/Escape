@@ -18,12 +18,12 @@ class Player :     # sa position dans le monde s'affichera dans la loop
         self.onGround = True
         self.jumpHeight = 50
         self.jumpPower = 10
-        self.path = './image/sprite/Augur_Ambros/'
+        self.path = 'sprite/Augur_Ambros/'
 
     def move(self, direction):
         print(f"posX : {self.posX}\nposY : {self.posY}")
         if self.posX >= largeur * TILE_SIZE or self.posX < 1:
-            print("[Player::actualizePos()] INFO:\t " + str("Can't go there"))
+            print("[Player::actualizePos()] INFO:\t " + "Can't go there")
             if self.posX >= largeur * TILE_SIZE :
                 self.posX -= 5
             elif self.posX < 1:
@@ -123,7 +123,7 @@ font = pygame.font.Font('freesansbold.ttf', 20)
 
 
 #variables de la jungle
-NB_TILES = 20   #nombre de tiles a charger (ici de 00.png à 19.png) 20 au total
+NB_TILES = 21   #nombre de tiles a charger (ici de 00.png à 19.png) 20 au total
 TILE_SIZE=64   #definition du dessin (carré) taille de la taille en px
 
 largeur=8       #hauteur du niveau
@@ -146,23 +146,20 @@ directionF = 1
 #definition du niveau les nb coressponde aux nb des tiles
 
 niveau = [
-     [-1, -1, -1, -1, -1, -1, -1, -1],
-     [8, -1, -1, -1, -1, -1, -1, -1],
-     [8, -1, -1, -1, -1, -1, -1, -1],
-     [8, -1, -1, -1, -1, -1, -1, -1],
-     [8, -1, -1, 3, 4, -1, -1, -1],
+     [20, 20, 20, 20, 20, 20, 20, 20],
+     [8, 20, 20, 20, 20, 20, 20, 20],
+     [8, 20, 20, 20, 20, 20, 20, 20],
+     [8, 20, 20, 20, 20, 20, 20, 20],
+     [8, 20, 20, 3, 4, 20, 20, 20],
      [13, 12, 12, 18, 19, 11, 12, 4]]
 
-fantome=[
-     [0,0,0,0,0,0,0,0],
-     [0,0,0,4,0,0,0,0],
-     [0,0,0,3,0,0,0,0],
-     [0,0,0,2,0,0,0,0],
-     [0,0,0,1,0,0,0,0],
-     [0,0,0,0,0,0,0,0]]
 
 
-fenetre = pygame.display.set_mode((largeur*TILE_SIZE, (hauteur+1)*TILE_SIZE))
+fenetre = pygame.display.set_mode((largeur*TILE_SIZE, (hauteur)*TILE_SIZE),pygame.DOUBLEBUF, 32 )
+
+background = pygame.Surface((largeur*TILE_SIZE, hauteur*TILE_SIZE), pygame.SRCALPHA, 32)
+
+
 
 def chargetiles(tiles):
     """
@@ -170,7 +167,7 @@ def chargetiles(tiles):
     pour l'instant, que dans jungle
     """
     for n in range(NB_TILES):
-        tiles.append(pygame.image.load(fr'image/map/Tilemaps/jungle/tile'+str(n)+'.png')) #attention au chemin
+        tiles.append(pygame.image.load(fr'Tilemaps/jungle/tile'+str(n)+'.png').convert_alpha()) #attention au chemin
         #   U:/Documents/NSI/Mini-Projets/jeuNoel/image/map/Tilemaps/jungle/tile
 
 def afficheNiveau(niveau):
@@ -179,57 +176,16 @@ def afficheNiveau(niveau):
     """
     for y in range(hauteur): # changer ça plus tard pour afficher une partie de la map
         for x in range(largeur):
-            fenetre.blit(tiles[niveau[y][x]],(x*TILE_SIZE,y*TILE_SIZE))
+            background.blit(tiles[niveau[y][x]],(x*TILE_SIZE,y*TILE_SIZE))
 
 
-def afficheJoueur(numero):
+def afficheJoueur():
     """
     affiche le joueur en position x et y
     """
     x= player.posX
     y = player.posY
-    fenetre.blit(pygame.image.load(player.path + "droit1.png"),(x, y)) #  changer tt ça
-
-
-def afficheScore(score):
-    """
-    affiche le score
-    changer le système de score
-    """
-    scoreAafficher = font.render(str(score), True, (0, 255, 0))
-    fenetre.blit(scoreAafficher,(120,250))
-
-def rechercheFantome(fantome,position): #recherche les coord du fantome dans la liste fantome
-    """
-    recherche les coordonnées du fantome en fonction du numéro de sa postion dans le parcours
-    """
-    print(position)                     #la position doit etre dans la liste fantome sinon plantage
-    for y in range(hauteur):
-        for x in range(largeur):
-            if fantome[y][x]==position:
-                coodFantome=x,y
-    return coodFantome          #les coord du fantome x et y sont dans un tuple coodFantome
-
-def deplaceFantome(fantome):
-    """
-    Incrémente automatiquement le déplacement du fantome, gère sa vitesse et son affichage
-    """
-    global frameRateCounterFantome
-    global positionFantome
-    global posfX,posfY
-    global directionF
-    if frameRateCounterFantome==FRAMERATE_FANTOME:      #ralenti la viteese du fantome
-        posfX,posfY=rechercheFantome(fantome,positionFantome)   #deballage du tuple coordonnées du fantome
-        if positionFantome==NB_DEPLACEMENT_FANTOME:     #un tour est fait donc on passe à la 1ere position
-            directionF = -1
-        if positionFantome == 1:
-            directionF = 1
-
-        positionFantome += 1*directionF
-
-        frameRateCounterFantome=0                       #compteur de vitesse à zero
-    fenetre.blit(tiles[15],(posfX * TILE_SIZE,posfY * TILE_SIZE)) #affichage du fantome
-    frameRateCounterFantome+=1                          #incrémentation du compteur de vitesse
+    background.blit(pygame.image.load(player.path + "droit1.png"),(x, y)) #  changer tt ça
 
 
 
@@ -266,11 +222,13 @@ while not isDead:
 
 
     fenetre.fill((0,0,0))   #efface la fenetre
-    pygame.display.update() #mets à jour la fentre graphique
 
     afficheNiveau(niveau)   #affiche le niveau
-    afficheJoueur(14)          #affiche le joueur et le score
-    deplaceFantome(fantome) #mettre un commentaire pour desactiver le déplacement du fantome
-    afficheScore(compteurBilles)
+    afficheJoueur()          #affiche le joueur et le score
+    fenetre.blit(background, pygame.rect.Rect(0,0,largeur*TILE_SIZE, hauteur*TILE_SIZE))
+
+    pygame.display.flip()
+    #pygame.display.update() #mets à jour la fentre graphique
+
 
 pygame.quit()
