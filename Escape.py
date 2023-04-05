@@ -148,15 +148,15 @@ directionF = 1
 #definition du niveau les nb coressponde aux nb des tiles
 
 niveau = [
-     [20, 20, -1, -1, -1, -1, -1, -1],
-     [8, -1, -1, -1, -1, -1, -1, -1],
-     [8, -1, -1, -1, -1, -1, -1, -1],
-     [8, -1, -1, -1, -1, -1, -1, -1],
-     [8, -1, -1, 3, 4, -1, -1, -1],
+     [20, 20, 20, 20, 20, 20, 20, 20],
+     [8, 20, 20, 20, 20, 20, 20, 20],
+     [8, 20, 20, 20, 20, 20, 20, 20],
+     [8, 20, 20, 20, 20, 20, 20, 20],
+     [8, 20, 20, 3, 4, 20, 20, 20],
      [13, 12, 12, 18, 19, 11, 12, 4]]
 
 
-fenetre = pygame.display.set_mode((largeur*TILE_SIZE, hauteur*TILE_SIZE), pygame.DOUBLEBUF, 32)
+window = pygame.display.set_mode((largeur*TILE_SIZE, hauteur*TILE_SIZE), pygame.DOUBLEBUF, 32)
 
 def chargetiles(tiles):
     """
@@ -172,10 +172,10 @@ def afficheNiveau(niveau):
     affiche le niveau a partir de la liste a deux dimensions niveau[][]
     """
     bck = pygame.image.load("backgrounds/jungle.png")
-    fenetre.blit(bck, (0,0))
+    window.blit(bck, (0,0))
     for y in range(hauteur): # changer ça plus tard pour afficher une partie de la map
         for x in range(largeur):
-            fenetre.blit(tiles[niveau[y][x]],(x*TILE_SIZE,y*TILE_SIZE))
+            window.blit(tiles[niveau[y][x]],(x*TILE_SIZE,y*TILE_SIZE))
 
 
 def afficheJoueur():
@@ -184,7 +184,7 @@ def afficheJoueur():
     """
     x= player.posX
     y = player.posY
-    fenetre.blit(pygame.image.load(player.path + "droit1.png"),(x, y)) #  changer tt ça
+    window.blit(pygame.image.load(player.path + "droit1.png"),(x, y)) #  changer tt ça
 
 
 
@@ -204,20 +204,30 @@ while not isDead:
                 print("jump")
                 player.jump()
 
-    # si on veut détecter quand une touche reste enfoncée
-    if event.type == pygame.KEYDOWN:
-        keys = pygame.key.get_pressed()
 
-        if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+    
+    keys=pygame.key.get_pressed()
+
+    move_ticker = 0
+    if keys[pygame.K_d]:
+        if move_ticker == 0:
+            move_ticker = 10
             print("right")
             player.move(1)
 
-        if event.key == pygame.K_a or event.key == pygame.K_LEFT:
+    if keys[pygame.K_q]:
+        if move_ticker == 0:
+            move_ticker = 10
             print('left')
             player.move(-1)
+            
+
+    if move_ticker > 0:
+        move_ticker -= 1
+        print("test")
 
 
-    fenetre.fill((0,0,0))   #efface la fenetre
+    window.fill((0,0,0))   #efface la window
 
     afficheNiveau(niveau)   #affiche le niveau
     afficheJoueur()          #affiche le joueur et le score
