@@ -4,6 +4,28 @@ import math
 
 ############################## CLASS #####################################
 
+class Vector2 :
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.norme = self.norme()
+
+    def norme(self):
+        return math.sqrt(self.x**2 + self.y**2)
+    
+    def scalaire(self, vec1, vec2):
+        #on est dans un repère orthonormé
+        x = vec1.X
+        y = vec1.y
+        x2 = vec2.x
+        y2 = vec2.y
+
+        return x*x2 + y*y2
+    
+    ## addition/souscraction/
+    
+
+
 class Player :     # sa position dans le monde s'affichera dans la loop
     def __init__(self, position, height, width, speed, mass):
         self.posX, self.posY = position
@@ -21,16 +43,35 @@ class Player :     # sa position dans le monde s'affichera dans la loop
         self.path = 'sprite/Augur_Ambros/'
 
     def move(self, direction):
+        # regarder si on peut aller dans la direction voulu
+        # si on peut on bouge
+        # si on peut pas on fait rien ou recule
+
+        autorized = self.isInside((self.posX + self.speed, self.posY), self.posLvl)
+
+        if (autorized):
+            if(direction == 1):
+                self.posX += self.speed
+            elif (direction == -1):
+                self.posX -= self.speed
+    
+
+        """
         print(f"[Player::move()] INFO:\tposX : {self.posX}\n[Player::move()] INFO:\tposY : {self.posY}")
+
         if self.posX >= largeur * TILE_SIZE or self.posX < 1:
             print("[Player::move()] INFO:\t" + "Can't go there")
+
             if self.posX >= largeur * TILE_SIZE :
                 self.posX -= 5
                 print("[Player::move()] INFO:\t" + "player is at the right border")
                 print("[player::move()] INFO:\t" + f"posX : {self.posX}\t\t\tposY : {self.posY}")
+
+
             elif self.posX < 1:
                 self.posX += 5
                 print("[Player::move()] INFO:\t" + "player is at the left border")
+                
 
         autorized = not isInside((self.posX,self.posY), self.posLvl)
 
@@ -39,11 +80,13 @@ class Player :     # sa position dans le monde s'affichera dans la loop
         if direction == -1 and autorized:
             self.posX -= self.speed
 
+
         if self.posX < 1:
             self.posX = 1
         elif self.posX*TILE_SIZE > 8*TILE_SIZE:
             self.posX = 8 * TILE_SIZE
 
+        """
         self.actualizePos()
         print()
         print()
@@ -136,15 +179,6 @@ tiles=[]       #liste d'images tiles
 #variables de gestion du joueur
 player = Player((1,5),32,32,5, 5)
 
-#variables de gestion du fantome
-FRAMERATE_FANTOME= 120      #vitesse du fantome chiffre elevé = vitesse lente
-NB_DEPLACEMENT_FANTOME = 4   #le fantome se deplace sur 9 cases  --> sol à sol+4
-positionFantome=1
-frameRateCounterFantome=0
-posfX=4     #position initiale du fantome
-posfY=1
-directionF = 1
-
 #definition du niveau les nb coressponde aux nb des tiles
 
 niveau = [
@@ -164,7 +198,7 @@ def chargetiles(tiles):
     pour l'instant, que dans jungle
     """
     for n in range(NB_TILES):
-        tiles.append(pygame.image.load(fr'Tilemaps/jungle/tile'+str(n)+'.png').convert_alpha()) #attention au chemin
+        tiles.append(pygame.image.load(fr'Tilemaps/jungle/tile'+str(n)+'.png')) #attention au chemin
         #   U:/Documents/NSI/Mini-Projets/jeuNoel/image/map/Tilemaps/jungle/tile
 
 def afficheNiveau(niveau):
@@ -195,7 +229,7 @@ isDead = False
 
 while not isDead:
 
-    #si on veut détectée une touche est pressée
+    #si on veut détectée une touche est pressée un seule fois
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             isDead = True
@@ -215,7 +249,7 @@ while not isDead:
             print("right")
             player.move(1)
 
-    if keys[pygame.K_q]:
+    if keys[pygame.K_a]:
         if move_ticker == 0:
             move_ticker = 10
             print('left')
