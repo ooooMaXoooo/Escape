@@ -8,7 +8,6 @@ class Vector2 :
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.norme = self.norme()
 
     def norme(self):
         return math.sqrt(self.x**2 + self.y**2)
@@ -49,6 +48,9 @@ class Player :     # sa position dans le monde s'affichera dans la loop
         self.jumpHeight = 50
         self.jumpPower = 50
         self.path = 'sprite/Augur_Ambros/'
+        self.falling = [False, False] # double boolean to detect if it's a real fall
+        self.canMove = True
+        self.acceleration = 0
 
 
     def move(self, direction):
@@ -57,55 +59,25 @@ class Player :     # sa position dans le monde s'affichera dans la loop
         # si on peut pas on fait rien ou recule
 
 
-        #autorized = self.isInside()
+        #inside = self.isInside()
 
 
-        if(self.onGround):
+        if(self.onGround and self.canMove):
 
             if(direction == 1):
                 self.direction.x = self.speed
+
             elif (direction == -1):
                 self.direction.x = -self.speed
+
             elif(direction == 0):
                 self.direction.x = 0
-
-            """
-            print(f"[Player::move()] INFO:\tposX : {self.posX}\n[Player::move()] INFO:\tposY : {self.posY}")
-
-            if self.posX >= largeur * TILE_SIZE or self.posX < 1:
-                print("[Player::move()] INFO:\t" + "Can't go there")
-
-                if self.posX >= largeur * TILE_SIZE :
-                    self.posX -= 5
-                    print("[Player::move()] INFO:\t" + "player is at the right border")
-                    print("[player::move()] INFO:\t" + f"posX : {self.posX}\t\t\tposY : {self.posY}")
-
-
-                elif self.posX < 1:
-                    self.posX += 5
-                    print("[Player::move()] INFO:\t" + "player is at the left border")
-
-
-            autorized = not isInside((self.posX,self.posY), self.posLvl)
-
-            if direction == 1 and autorized:
-                self.posX += self.direction
-            if direction == -1 and autorized:
-                self.posX -= self.direction
-
-
-            if self.posX < 1:
-                self.posX = 1
-            elif self.posX*TILE_SIZE > 8*TILE_SIZE:
-                self.posX = 8 * TILE_SIZE
-
-            """
 
     def jump(self):
         # on regarde si on est sur le sol
         if(self.onGround):
             # si on l'est, on applique une force
-            self.direction.add(Vector2(0, -self.jumpPower)) # - jumpPowzer àcause du repere
+            self.direction.add(Vector2(0, -self.jumpPower)) # - jumpPower àcause du repere
             self.isJumping = True
             self.onGround = False
             print("jump")
@@ -113,13 +85,28 @@ class Player :     # sa position dans le monde s'affichera dans la loop
 
 
     def actualizePos(self):
+
+        if(not self.falling[0]):
+            self.falling[0] = True
+            self.falling[1] = False
+            self.acceleration = 0
+        else :
+            if(not self.falling[1]):
+                self.falling[1] = True
+
         #actualiser la pos
         self.posX += self.direction.x * self.speed
-        self.posY += self.direction.y
+
+        if(self.falling[0] and self.falling[1]):
+            self.acceleration += self.direction.y / self.mass
+            self.posY += self.direction.y + self.acceleration
+        else:
+            self.posY += self.direction.y
 
 
         #gérer la gravité
         self.direction.y = GRAVITY
+
 
         # gérer les collisions
         collide = self.isInside()
@@ -127,7 +114,6 @@ class Player :     # sa position dans le monde s'affichera dans la loop
 
 
         # actualiser la posLvl
-
 
         x = int(self.posX // TILE_SIZE)
         y = int(self.posY // TILE_SIZE)
@@ -137,6 +123,8 @@ class Player :     # sa position dans le monde s'affichera dans la loop
 
 
     def isInside(self):  # on doit test avec tous les objets de la scène sans le sol --> pas optimal      --> soluc : créer un fichier avec les données de toute la map et le regarder intélligement
+        inside = False
+        
         up = False
         side = 1  ## 1, 0 or -1
         watch = []
@@ -254,7 +242,7 @@ class Player :     # sa position dans le monde s'affichera dans la loop
                     pos = 0
 
                 if(self.posLvl[0] == hauteur):
-                    self.posLvl[0] -= 1
+                    self.posLvl[0] = hauteur - 1
 
                 if(niveau[self.posLvl[0] + 1][self.posLvl[1] + pos] == 20):
                     continue
@@ -291,28 +279,42 @@ class Player :     # sa position dans le monde s'affichera dans la loop
             if(vertical): #il est en haut ou en bas
                 continue
 
-            # uniquement si on touche une tile
+            # uniquement si on touche une tile*
+            touch = False
+
+
 
             if(4 < tempPos < 8): # on touche le sol
                 ## ajout de isJumping ?
                 self.onGround = True
                 self.direction.substract(Vector2(0, GRAVITY))
-                if(self.isJumping):
+                if(self.isJumping or (self.falling[0] and self.falling[1])):
                     self.isJumping = False
                     self.direction.x = 0
+                self.falling = [False, False]
 
             elif 2 < tempPos < 6:
-                 self.direction.x = self.speed
-                 print("touch right")
+                self.direction.x = -self.speed
+                print("touch right")
+                self.canMove = False
+                touch = True
 
             elif 1 == tempPos or tempPos > 6:
-                 self.direction.x = self.speed
-                 print("touch left")
+                self.direction.x = self.speed
+                print("touch left")
+                self.canMove = False
+                touch = True
+            
+            if(not self.canMove and not touch):
+                self.canMove = True
 
-            return True
 
-        self.onGround = False
-        return False
+            inside = True
+
+        if not inside:
+            self.onGround = False
+            return False
+        return True
 
 
 
@@ -323,15 +325,7 @@ class Player :     # sa position dans le monde s'affichera dans la loop
 def tp(position, object):
     print("[TP()]INFO :\ttp player")
 
-GRAVITY = 2  # m/s²
-
-
-#########################################################################
-
-def findTileSize(id):
-    if 0 <= id >= 20:
-        return (64,64)
-    return (0,0)
+GRAVITY = 0.25  # m/s²
 
 
 #########################################################################
@@ -350,7 +344,9 @@ hauteur=6       #largeur du niveau
 tiles=[]       #liste d'images tiles
 
 #variables de gestion du joueur
-player = Player((0,1),32,1.75, 5)
+player = Player((0,0),32,1, 10)
+counterMovement = 1  # 1 --> 4
+right = True
 
 #definition du niveau les nb coressponde aux nb des tiles
 
@@ -389,9 +385,22 @@ def afficheJoueur():
     """
     affiche le joueur en position x et y
     """
-    x= player.posX
+    x = player.posX
     y = player.posY
-    window.blit(pygame.image.load(player.path + "droit1.png"),(x, y)) #  changer tt ça
+
+    global right
+
+    if(player.direction.x > 0):
+        window.blit(pygame.image.load(player.path + "droit" + str(counterMovement) + ".png"),(x, y)) #  changer tt ça
+        right = True
+    elif(player.direction.x < 0):
+        window.blit(pygame.image.load(player.path + "gauche" + str(counterMovement) + ".png"),(x, y)) #  changer tt ça
+        right = False
+    else:
+        if(right):
+            window.blit(pygame.image.load(player.path + "droit" + str(counterMovement) + ".png"),(x, y))
+        else:
+            window.blit(pygame.image.load(player.path + "gauche" + str(counterMovement) + ".png"),(x, y)) 
 
 
 
@@ -412,9 +421,12 @@ while not isDead:
             if event.key == pygame.K_SPACE and player.isJumping == False:
                 player.jump()
         elif event.type == pygame.KEYUP :
-            if event.key == pygame.K_a or  event.key == pygame.K_d:
+            if event.key == pygame.K_d or event.key == pygame.K_q:
               player.move(0)
+              
 
+    if (player.direction.x == 0):
+        counterMovement = 1
 
 
     keys = pygame.key.get_pressed()
@@ -422,12 +434,21 @@ while not isDead:
     move_ticker = 0
     if keys[pygame.K_d]:
         if move_ticker == 0:
-            move_ticker = 10
+            move_ticker = 100
+            counterMovement += 1
+
+            if counterMovement > 4:
+                counterMovement = 1
             player.move(1)
 
-    if keys[pygame.K_a]:
+    if keys[pygame.K_q]:
         if move_ticker == 0:
-            move_ticker = 10
+            move_ticker = 100
+
+            counterMovement += 1
+
+            if counterMovement > 4:
+                counterMovement = 1
             player.move(-1)
 
 
