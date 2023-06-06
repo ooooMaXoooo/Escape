@@ -43,14 +43,13 @@ class Player :     # sa position dans le monde s'affichera dans la loop
         self.speed = speed
         self.mass = mass
         self.isJumping = False
-        self.fluidité = 30   # en IPS
         self.onGround = True
-        self.jumpHeight = 50
-        self.jumpPower = 50
+        self.jumpPower = 50 # en pixel
         self.path = 'sprite/Augur_Ambros/'
         self.falling = [False, False] # double boolean to detect if it's a real fall
         self.canMove = True
         self.acceleration = 0
+        self.counterJump = 20
 
 
     def move(self, direction):
@@ -77,7 +76,7 @@ class Player :     # sa position dans le monde s'affichera dans la loop
         # on regarde si on est sur le sol
         if(self.onGround):
             # si on l'est, on applique une force
-            self.direction.add(Vector2(0, -self.jumpPower)) # - jumpPower àcause du repere
+            #self.direction.add(Vector2(0, -self.jumpPower)) # - jumpPower àcause du repere
             self.isJumping = True
             self.onGround = False
             print("jump")
@@ -85,6 +84,14 @@ class Player :     # sa position dans le monde s'affichera dans la loop
 
 
     def actualizePos(self):
+
+        if(self.isJumping and self.counterJump != 0):
+            self.direction.y -= 1
+            self.counterJump -= 1
+            if(self.counterJump == 0):
+                self.isJumping = False
+                self.counterJump = 20
+            
 
         if(not self.falling[0]):
             self.falling[0] = True
@@ -289,7 +296,8 @@ class Player :     # sa position dans le monde s'affichera dans la loop
                 self.onGround = True
                 self.direction.substract(Vector2(0, GRAVITY))
                 if(self.isJumping or (self.falling[0] and self.falling[1])):
-                    self.isJumping = False
+                    if(self.isJumping):
+                        self.isJumping = False
                     self.direction.x = 0
                 self.falling = [False, False]
 
